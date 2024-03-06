@@ -12,8 +12,8 @@ canvas.width = 800;
 canvas.height = 600;
 document.body.appendChild(canvas);
 
-const heroWidth = 128; // Width of each frame in the sprite sheet
-const heroHeight = 384; // Height of each frame in the sprite sheet
+const heroWidth = 11; // Width of each frame in the sprite sheet
+const heroHeight = 32; // Height of each frame in the sprite sheet
 let heroFrameIndex = 0; // Current frame index for hero animation
 let heroX = canvas.width / 2; // Initial X position of hero
 let heroY = canvas.height - 100; // Initial Y position of hero
@@ -23,12 +23,11 @@ let score = 0; // Score counter
 
 // Generate monsters randomly
 function generateMonsters() {
-    // Generate monsters based on probability
     if (Math.random() < 0.1) { // Adjust probability as needed
         const monster = {
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            width: 32, // Adjust according to monster size
+            width: 32, // Adjust according to monster sizes
             height: 32, // Adjust according to monster size
         };
         monsters.push(monster);
@@ -37,7 +36,6 @@ function generateMonsters() {
 
 // Handle player movement
 function movePlayer(keyCode) {
-    // Example: move player based on arrow keys
     if (keyCode === 37 && heroX > 0) { // Left arrow key
         heroX -= heroSpeed;
     } else if (keyCode === 39 && heroX < canvas.width - heroWidth) { // Right arrow key
@@ -51,7 +49,6 @@ function movePlayer(keyCode) {
 
 // Check collision between hero and monsters
 function checkCollision() {
-    // Example: loop through monsters and check for collision with hero
     monsters.forEach(monster => {
         if (
             heroX < monster.x + monster.width &&
@@ -80,7 +77,7 @@ function drawHero() {
     ctx.drawImage(
         heroImage,
         heroFrameIndex * heroWidth, // Source X
-        0, // Source Y (assuming all frames are on the same row)
+        0, // Source Y 
         heroWidth, // Source width
         heroHeight, // Source height
         heroX, // Destination X
@@ -92,8 +89,6 @@ function drawHero() {
 
 // Function to update player animation
 function updateHeroAnimation() {
-    // Update the hero frame index here based on player movement or other game logic
-    // Example: increment frame index for next frame in animation
     heroFrameIndex = (heroFrameIndex + 1) % 4; // Assuming there are 4 frames in the sprite sheet
 }
 
