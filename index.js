@@ -1,28 +1,95 @@
-// Load images
-const backgroundImage = new Image();
-backgroundImage.src = 'images/background.png';
+class Game {
+    constructor() {
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.width = 800;
+        this.canvas.height = 600;
+        document.body.appendChild(this.canvas);
+        this.keys = [];
+        this.hero = new Hero();
+        this.backgroundImage = new Image();
+        this.heroImage = new Image();
+        this.fps = 10;
+        this.fpsInterval = 1000 / this.fps;
+        this.then = Date.now();
+        this.startTime = this.then;
+        this.now;
+        this.elapsed;
+    }
 
-const heroImage = new Image();
-heroImage.src = 'images/hero.png';
+    init() {
+        this.backgroundImage.src = 'images/background.png';
+        this.heroImage.src = 'images/hero.png';
+        this.hero.image = this.heroImage;
+        window.addEventListener("keydown", (e) => this.keys[e.keyCode] = true);
+        
+        window.addEventListener("keyup", (e) => delete this.keys[e.keyCode]);
+        this.animate();
+    }
 
-// Define game variables
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
-document.body.appendChild(canvas);
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.now = Date.now();
+        this.elapsed = this.now - this.then;
+        if (this.elapsed > this.fpsInterval) {
+            this.then = this.now - (this.elapsed % this.fpsInterval);
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+            this.hero.draw(this.ctx);
+            this.hero.move(this.keys, this.canvas);
+        }
+    }
+}
 
-const keys = [];
-const hero = {
-    x: 0, 
-    y: 0,
-    width: 30,
-    height: 32,
-    frameX: 0,
-    frameY: 0,
-    speed: 1,
-    moving: false
-};
+class Hero {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.width = 30;
+        this.height = 32;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.speed = 9;
+        this.moving = false;
+        this.image = new Image();
+    }
+
+    draw(ctx) {
+        ctx.drawImage(this.image, this.width * this.frameX, this.height * this.frameY, this.width, this.height, this.x, this.y, this.width, this.height);
+    }
+
+    move(keys, canvas) {
+        if (keys[38] && this.y > 100) { // Up arrow
+            this.y -= this.speed;
+            this.frameY = 5;
+        }
+        if (keys[40] && this.y < canvas.height - this.height) { // Down arrow
+            this.y += this.speed;
+            this.frameY = 3;
+        }
+        if (keys[37] && this.x > 0) { // Left arrow
+            this.x -= this.speed;
+            this.frameY = 1;
+        }
+        if (keys[39] && this.x < canvas.width - this.width) { // Right arrow
+            this.x += this.speed;
+            this.frameY = 4;
+        }
+        this.moving = keys[38] || keys[40] || keys[37] || keys[39];
+        this.animate();
+    }
+
+    animate() {
+        if (this.frameX < 3 && this.moving) this.frameX++;
+        else this.frameX = 0;
+    }
+}
+
+const game = new Game();
+game.init();
+
+// const monsters = []; // Array to store monster objects
+// let score = 0; // Score counter
 
 //------dont delete below, experimenting with another method to animate the hero
 // const heroWidth = 11; // Width of each frame in the sprite sheet
@@ -32,53 +99,18 @@ const hero = {
 // let heroY = canvas.height - 100; // Initial Y position of hero
 // const heroSpeed = 5; // Speed of hero movement
 
-function spriteMovement(img, sX, sY, sW, sH, dX, dY, dW, dH) {
-    ctx.drawImage(img, sX, sY, sW, sH, dX, dY, dW, dH);
-}
+//----!!!!IMPORTANT DO NOT DELETE bringToLife function!!!!----
 
-function bringToLife() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-    spriteMovement(heroImage, hero.width * hero.frameX, hero.height * hero.frameY, 
-    hero.width, hero.height, hero.x, hero.y, hero.width, hero.height );
-    moveHero();
-    requestAnimationFrame(bringToLife);
-}
-bringToLife();
-
-
-
-
-//maybe this movement will work better
-window.addEventListener("keydown", function(e) {
-    keys[e.keyCode] = true;
-});
-window.addEventListener("keyup", function(e){
-    delete keys[e.keyCode];
-});
-
-function moveHero() {
-    if (keys[38] && hero.y > 100) { // Up arrow
-        hero.y -= hero.speed;
-        hero.frameY = 5;
-    }
-    if (keys[40] && hero.y < canvas.height - hero.height ) { // Down arrow
-        hero.y += hero.speed;
-        hero.frameY  = 3;
-
-    }
-    if (keys[37] && hero.x > 0) { // Left arrow
-        hero.x -= hero.speed;
-        hero.frameY = 4;
-    }
-    if (keys[39] && hero.x < canvas.width - hero.width) { // Right arrow
-        hero.x += hero.speed;
-        hero.frameY = 1;
-    }
-}
-
-const monsters = []; // Array to store monster objects
-let score = 0; // Score counter
+// function bringToLife() {
+//     ctx.clearRect(0,0,canvas.width, canvas.height);
+//     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+//     spriteMovement(heroImage, hero.width * hero.frameX, hero.height * hero.frameY, 
+//     hero.width, hero.height, hero.x, hero.y, hero.width, hero.height );
+//     moveHero();
+//     heroFrames();
+//     requestAnimationFrame(bringToLife);
+// }
+// bringToLife();
 
 
 // // Handle player movement
