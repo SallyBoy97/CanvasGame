@@ -55,7 +55,12 @@ class Hero {
     }
 
     draw(ctx) {
-        ctx.drawImage(this.image, this.width * this.frameX, this.height * this.frameY, this.width, this.height, this.x, this.y, this.width, this.height);
+        const scale = 2;
+        ctx.drawImage(this.image, 
+                this.width * this.frameX, this.height * this.frameY, 
+                this.width, this.height, 
+                this.x, this.y, 
+                this.width * scale, this.height * scale);
     }
 
     move(keys, canvas) {
