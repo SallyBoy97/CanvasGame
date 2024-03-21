@@ -15,16 +15,62 @@ class Game {
         this.startTime = this.then;
         this.now;
         this.elapsed;
+        this.score = 0; 
+        this.scoreElement = document.createElement('div'); 
+        document.body.appendChild(this.scoreElement);
+        this.monsters = []; 
+        this.monsterImage = new Image();
+        this.numMonsters = 8;
+        this.animate = this.animate.bind(this);
+
+    }
+
+    updateScore() {
+        this.scoreElement.innerText = `Score: ${this.score}`; 
     }
 
     init() {
         this.backgroundImage.src = 'images/background.png';
         this.heroImage.src = 'images/hero.png';
+        this.monsterImage.src = 'images/Monster.png'; 
         this.hero.image = this.heroImage;
         window.addEventListener("keydown", (e) => this.keys[e.keyCode] = true);
         
         window.addEventListener("keyup", (e) => delete this.keys[e.keyCode]);
+
+        this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+
+        
+        // Generate initial monster
+        for (let i = 0; i < this.numMonsters; i++) {
+            this.generateMonster();
+        }        
         this.animate();
+    }
+
+    generateMonster() {
+        const monster = new Monster();
+        monster.image = this.monsterImage;
+        monster.x = Math.random() * (this.canvas.width - monster.width);
+        monster.y = Math.random() * (this.canvas.height - monster.height);
+        this.monsters.push(monster);
+    }
+
+    resetGame() {
+        // Reset player position
+        this.hero.resetPosition();
+
+        // Clear monsters array
+        this.monsters = [];
+
+        // Generate new monsters
+        for (let i = 0; i < this.numMonsters; i++) {
+            this.generateMonster();
+        }
+
+        // Reset score
+        this.score = 0;
+        this.updateScore();
     }
 
     animate() {
@@ -37,6 +83,63 @@ class Game {
             this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
             this.hero.draw(this.ctx);
             this.hero.move(this.keys, this.canvas);
+
+               // Draw and update monsters
+            this.monsters.forEach(monster => {
+                monster.draw(this.ctx);
+                // // If the player has scored, reset monster position
+                // if (this.hero.x >= this.canvas.width - this.hero.width) {
+                //     monster.x = this.canvas.width + Math.random() * 100; // Randomize spawn position
+                //     monster.y = Math.random() * (this.canvas.height - monster.height);
+                // }
+                monster.move();
+            });
+
+              // Collision detection between hero and monsters
+              this.monsters.forEach((monster, index) => {
+
+                const heroHitbox = {
+                    x: this.hero.x + this.hero.width / 20,
+                    y: this.hero.y + this.hero.height / 1,
+                    width: this.hero.width / 20,
+                    height: this.hero.height * 4 / 10
+                };
+
+                if (
+                    heroHitbox.x < monster.x + monster.width &&
+                    heroHitbox.x + heroHitbox.width > monster.x &&
+                    heroHitbox.y < monster.y + monster.height &&
+                    heroHitbox.y + heroHitbox.height > monster.y
+                ) {
+                    // Reset player position
+                    this.hero.resetPosition();
+                    // Remove collided monster
+                    this.monsters.splice(index, 1);
+                    // Generate new monster
+                    this.generateMonster();
+                    // Reset game
+                    this.resetGame();
+
+                }
+            });
+
+             // Check if hero reaches the right side of the canvas
+             if (this.hero.x >= this.canvas.width - this.hero.width) {
+                this.score++; // Increment score
+                this.updateScore(); // Update the displayed score
+                if (this.score >= 1) {
+                    this.hero.resetPosition(); // Reset hero's position to start
+                    // Reset monster positions
+                    this.monsters.forEach(monster => {
+                        monster.x = Math.random() * (this.canvas.width - monster.width);
+                        monster.y = Math.random() * (this.canvas.height - monster.height);
+                    });
+                }
+            }
+             // Generate monsters moving from right to left
+        if (Math.random() < 0.05) { // Adjustable rate 
+            this.generateMonster();
+        }
         }
     }
 }
@@ -44,7 +147,7 @@ class Game {
 class Hero {
     constructor() {
         this.x = 0;
-        this.y = 0;
+        this.y = 500;
         this.width = 30;
         this.height = 32;
         this.frameX = 0;
@@ -52,6 +155,11 @@ class Hero {
         this.speed = 9;
         this.moving = false;
         this.image = new Image();
+    }
+
+    resetPosition() {
+        this.x = 0;
+        this.y = 500;
     }
 
     draw(ctx) {
@@ -64,7 +172,7 @@ class Hero {
     }
 
     move(keys, canvas) {
-        if (keys[38] && this.y > 100) { // Up arrow
+        if (keys[38] && this.y > 0) { // Up arrow
             this.y -= this.speed;
             this.frameY = 5;
         }
@@ -90,132 +198,33 @@ class Hero {
     }
 }
 
+class Monster {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.width = 90;
+        this.height =80;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.speed = 3; // You can adjust the monster's speed
+        this.image = new Image();
+    }
+
+    draw(ctx) {
+        const scale = .75;
+        ctx.drawImage(this.image, 
+                this.width * this.frameX, this.height * this.frameY, 
+                this.width, this.height, 
+                this.x, this.y, 
+                this.width * scale, this.height * scale);
+    }
+
+    move() {
+        this.x += (Math.random() - 1.5) * this.speed;
+        this.y += (Math.random() - 0.5) * this.speed;
+    }
+}
+
 const game = new Game();
 game.init();
 
-// const monsters = []; // Array to store monster objects
-// let score = 0; // Score counter
-
-//------dont delete below, experimenting with another method to animate the hero
-// const heroWidth = 11; // Width of each frame in the sprite sheet
-// const heroHeight = 32; // Height of each frame in the sprite sheet
-// let heroFrameIndex = 0; // Current frame index for hero animation
-// let heroX = canvas.width / 2; // Initial X position of hero
-// let heroY = canvas.height - 100; // Initial Y position of hero
-// const heroSpeed = 5; // Speed of hero movement
-
-//----!!!!IMPORTANT DO NOT DELETE bringToLife function!!!!----
-
-// function bringToLife() {
-//     ctx.clearRect(0,0,canvas.width, canvas.height);
-//     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-//     spriteMovement(heroImage, hero.width * hero.frameX, hero.height * hero.frameY, 
-//     hero.width, hero.height, hero.x, hero.y, hero.width, hero.height );
-//     moveHero();
-//     heroFrames();
-//     requestAnimationFrame(bringToLife);
-// }
-// bringToLife();
-
-
-// // Handle player movement
-// function movePlayer(keyCode) {
-//     if (keyCode === 37 && heroX > 0) { // Left arrow key
-//         heroX -= heroSpeed;
-//     } else if (keyCode === 39 && heroX < canvas.width - heroWidth) { // Right arrow key
-//         heroX += heroSpeed;
-//     } else if (keyCode === 38 && heroY > 0) { // Up arrow key
-//         heroY -= heroSpeed;
-//     } else if (keyCode === 40 && heroY < canvas.height - heroWidth) { // Down arrow key
-//         heroY += heroSpeed;
-//     }
-// }
-
-// // Check collision between hero and monsters
-// function checkCollision() {
-//     monsters.forEach(monster => {
-//         if (
-//             heroX < monster.x + monster.width &&
-//             heroX + heroWidth > monster.x &&
-//             heroY < monster.y + monster.height &&
-//             heroY + heroWidth > monster.y
-//         ) {
-//             // Collision detected, reset game
-//             resetGame();
-//         }
-//     });
-// }
-
-// // Reset the game
-// function resetGame() {
-//     score++; // Increment score
-//     // Reset hero position
-//     heroX = canvas.width / 2;
-//     heroY = canvas.height - 100;
-//     // Clear monsters array
-//     monsters.length = 0;
-// }
-
-// // Function to draw player sprite
-// function drawHero() {
-//     ctx.drawImage(
-//         heroImage,
-//         heroFrameIndex * heroWidth, // Source X
-//         0, // Source Y 
-//         heroWidth, // Source width
-//         heroHeight, // Source height
-//         heroX, // Destination X
-//         heroY, // Destination Y
-//         heroWidth, // Destination width
-//         heroHeight // Destination height
-//     );
-// }
-
-// // Function to update player animation
-// function updateHeroAnimation() {
-//     heroFrameIndex = (heroFrameIndex + 1) % 4; 
-// }
-
-// Game loop function
-// function gameLoop() {
-//     // Clear canvas
-//     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-//     // Draw background
-//     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-    
-//     // Draw hero
-//     drawHero();
-    
-//     // Draw monsters
-//     monsters.forEach(monster => {
-//         ctx.fillRect(monster.x, monster.y, monster.width, monster.height);
-//     });
-    
-//     // Update player animation
-//     updateHeroAnimation();
-    
-//     // Check collision
-//     checkCollision();
-    
-//     // Generate monsters
-//     generateMonsters();
-    
-//     // Render score
-//     ctx.fillStyle = 'white';
-//     ctx.font = '24px Arial';
-//     ctx.fillText('Score: ' + score, 10, 30);
-    
-//     requestAnimationFrame(gameLoop);
-// }
-
-// // Generate monsters based on seconds
-// setInterval(generateMonsters, 10000);
-
-// // // Event listener for keyboard input
-// // document.addEventListener('keydown', function(event) {
-// //     movePlayer(event.keyCode);
-// // });
-
-// // Start the game loop
-// gameLoop();
