@@ -100,7 +100,7 @@ class Game {
 
                 const heroHitbox = {
                     x: this.hero.x + this.hero.width / 4,
-                    y: this.hero.y + this.hero.height * 3 / 8,
+                    y: this.hero.y + this.hero.height / 1,
                     width: this.hero.width / 4,
                     height: this.hero.height * 2 / 5
                 };
