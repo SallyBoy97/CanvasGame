@@ -20,17 +20,22 @@ class Game {
         document.body.appendChild(this.scoreElement);
         this.monsters = []; 
         this.monsterImage = new Image();
-        this.numMonsters = 8;
+        this.numMonsters = 6;
         this.animate = this.animate.bind(this);
-
+        this.collisionSound = new Audio('sounds/death2.mp3'); 
+        this.instructionsElement = document.createElement('div');
+        this.instructionsElement.innerText = "The objective - Make it to the other side. Go slow, monsters will appear out of nowhere at times. If you die, your score will be deducted. The prize...glory";
+        document.body.appendChild(this.instructionsElement);
     }
 
     updateScore() {
         this.scoreElement.innerText = `Score: ${this.score}`; 
+        this.instructionsElement.innerText = "The objective - Make it to the other side. Go slow, monsters will appear out of nowhere at times. If you die, your score will be deducted. The prize...glory";
+
     }
 
     init() {
-        this.backgroundImage.src = 'images/background.png';
+        this.backgroundImage.src = 'images/space2.jpeg';
         this.heroImage.src = 'images/hero.png';
         this.monsterImage.src = 'images/Monster.png'; 
         this.hero.image = this.heroImage;
@@ -87,11 +92,6 @@ class Game {
                // Draw and update monsters
             this.monsters.forEach(monster => {
                 monster.draw(this.ctx);
-                // // If the player has scored, reset monster position
-                // if (this.hero.x >= this.canvas.width - this.hero.width) {
-                //     monster.x = this.canvas.width + Math.random() * 100; // Randomize spawn position
-                //     monster.y = Math.random() * (this.canvas.height - monster.height);
-                // }
                 monster.move();
             });
 
@@ -99,18 +99,27 @@ class Game {
               this.monsters.forEach((monster, index) => {
 
                 const heroHitbox = {
-                    x: this.hero.x + this.hero.width / 20,
-                    y: this.hero.y + this.hero.height / 1,
-                    width: this.hero.width / 20,
-                    height: this.hero.height * 4 / 10
+                    x: this.hero.x + this.hero.width / 4,
+                    y: this.hero.y + this.hero.height * 3 / 8,
+                    width: this.hero.width / 4,
+                    height: this.hero.height * 2 / 5
                 };
 
+                const monsterHitbox = {
+                    x: monster.x + monster.width / 4,
+                    y: monster.y + monster.height / 4,
+                    width: monster.width / 2,
+                    height: monster.height / 2
+                };
+            
                 if (
-                    heroHitbox.x < monster.x + monster.width &&
-                    heroHitbox.x + heroHitbox.width > monster.x &&
-                    heroHitbox.y < monster.y + monster.height &&
-                    heroHitbox.y + heroHitbox.height > monster.y
+                    heroHitbox.x < monsterHitbox.x + monsterHitbox.width &&
+                    heroHitbox.x + heroHitbox.width > monsterHitbox.x &&
+                    heroHitbox.y < monsterHitbox.y + monsterHitbox.height &&
+                    heroHitbox.y + heroHitbox.height > monsterHitbox.y
                 ) {
+                    // Play collision sound
+                    this.collisionSound.play();
                     // Reset player position
                     this.hero.resetPosition();
                     // Remove collided monster
@@ -137,7 +146,7 @@ class Game {
                 }
             }
              // Generate monsters moving from right to left
-        if (Math.random() < 0.05) { // Adjustable rate 
+        if (Math.random() < 0.03) { // Adjustable rate - better to keep low
             this.generateMonster();
         }
         }
@@ -147,7 +156,7 @@ class Game {
 class Hero {
     constructor() {
         this.x = 0;
-        this.y = 500;
+        this.y = 100;
         this.width = 30;
         this.height = 32;
         this.frameX = 0;
@@ -159,7 +168,7 @@ class Hero {
 
     resetPosition() {
         this.x = 0;
-        this.y = 500;
+        this.y = 100;
     }
 
     draw(ctx) {
@@ -206,7 +215,7 @@ class Monster {
         this.height =80;
         this.frameX = 0;
         this.frameY = 0;
-        this.speed = 3; // You can adjust the monster's speed
+        this.speed = 3; // You can adjust the monster's speed, looks better slower
         this.image = new Image();
     }
 
